@@ -22,6 +22,7 @@ var QueryLoader = (function () {
     , scripts = []
     , images = []
     , scriptPrefix = ''
+    , ops = {}
 	;
 	
 	var flatten = function(array) {
@@ -43,6 +44,7 @@ var QueryLoader = (function () {
   	  options.scripts && (scripts = options.scripts);
   	  options.images && (images = options.images);
   	  options.scriptPrefix && (scriptPrefix = options.scriptPrefix);
+  	  ops = options;
 	    
   		if (navigator.userAgent.match(/MSIE (\d+(?:\.\d+)+(?:b\d*)?)/) == "MSIE 6.0,6.0") {
   			//break if IE6			
@@ -219,7 +221,8 @@ var QueryLoader = (function () {
   		} else {
   			var height = $(selectorPreload).outerHeight();
   		}
-		
+		  
+		  var onComplete = ops.onComplete;
   		//The end animation, adjust to your likings
   		$(loadBar).animate({
   			height: height + "px",
@@ -227,6 +230,7 @@ var QueryLoader = (function () {
   		}, 500, "linear", function() {
   			$(overlay).fadeOut(800);
   			$(preloader).remove();
+  			onComplete && onComplete();
   		});
   	}
 	}
