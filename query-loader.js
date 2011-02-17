@@ -1,5 +1,5 @@
-var QueryLoader = {
-	/*
+var QueryLoader = (function () {
+  /*
 	 * QueryLoader		Preload your site before displaying it!
 	 * Author:			Gaya Kessler
 	 * Date:			23-09-09
@@ -10,160 +10,222 @@ var QueryLoader = {
 	 * before displaying the page to the user.
 	 */
 	
-	overlay: "",
-	loadBar: "",
-	preloader: "",
-	items: new Array(),
-	doneStatus: 0,
-	doneNow: 0,
-	selectorPreload: "body",
-	ieLoadFixTime: 2000,
-	ieTimeout: "",
+	
+	var overlay = ""
+    , loadBar = ""
+    , preloader = ""
+    , doneStatus = 0
+    , doneNow = 0
+    , ieLoadFixTime = 2000
+    , ieTimeout = ""
+    , selectorPreload = "body"
+    , scripts = []
+    , images = []
+	;
+	
+	var flatten = function(array) {
+	  return $.map(array, function (x) {
+	    if(x instanceof Array){
+	      return $.map(x,arguments.callee);
+	    } else {
+	      return x;
+	    }
+	  });
+	};
+	
+	return {
+	  
+  	init: function (options) {
+  	  options = options || {};
+	    
+  	  selectorPreload = options.selectorPreload || selectorPreload;
+  	  options.scripts && (scripts = options.scripts);
+  	  options.images && (images = options.images);
+	    
+  		if (navigator.userAgent.match(/MSIE (\d+(?:\.\d+)+(?:b\d*)?)/) == "MSIE 6.0,6.0") {
+  			//break if IE6			
+  			return false;
+  		}
+  		if (selectorPreload == "body") {
+  			this.spawnLoader();
+  			this.getImages(selectorPreload);
+  			this.createPreloading();
+  		} else {
+  			$(document).ready(function() {
+  				this.spawnLoader();
+  				this.getImages(selectorPreload);
+  				this.createPreloading();
+  			});
+  		}
 		
-	init: function() {
-		if (navigator.userAgent.match(/MSIE (\d+(?:\.\d+)+(?:b\d*)?)/) == "MSIE 6.0,6.0") {
-			//break if IE6			
-			return false;
-		}
-		if (QueryLoader.selectorPreload == "body") {
-			QueryLoader.spawnLoader();
-			QueryLoader.getImages(QueryLoader.selectorPreload);
-			QueryLoader.createPreloading();
-		} else {
-			$(document).ready(function() {
-				QueryLoader.spawnLoader();
-				QueryLoader.getImages(QueryLoader.selectorPreload);
-				QueryLoader.createPreloading();
-			});
-		}
-		
-		//help IE drown if it is trying to die :)
-		QueryLoader.ieTimeout = setTimeout("QueryLoader.ieLoadFix()", QueryLoader.ieLoadFixTime);
-	},
+  		//help IE drown if it is trying to die :)
+  		var self = this;
+  		ieTimeout = setTimeout("QueryLoader.ieLoadFix()", function () {
+  		  self.ieLoadFixTime();
+  		});
+  	},
 	
-	ieLoadFix: function() {
-		var ie = navigator.userAgent.match(/MSIE (\d+(?:\.\d+)+(?:b\d*)?)/);
-		if (ie && ie[0].match("MSIE")) {
-			while ((100 / QueryLoader.doneStatus) * QueryLoader.doneNow < 100) {
-				QueryLoader.imgCallback();
-			}
-		}
-	},
+  	ieLoadFix: function() {
+  		var ie = navigator.userAgent.match(/MSIE (\d+(?:\.\d+)+(?:b\d*)?)/);
+  		if (ie && ie[0].match("MSIE")) {
+  			while ((100 / doneStatus) * doneNow < 100) {
+  				this.loadedCallback();
+  			}
+  		}
+  	},
 	
-	imgCallback: function() {
-		QueryLoader.doneNow ++;
-		QueryLoader.animateLoader();
-	},
+  	loadedCallback: function() {
+  		doneNow += 1;
+  		this.animateLoader();
+  	},
 	
-	getImages: function(selector) {
-		var everything = $(selector).find("*:not(script)").each(function() {
-			var url = "";
+  	getImages: function(selector) {
+  		var everything = $(selector).find("*:not(script)").each(function() {
+  			var url = "";
 			
-			if ($(this).css("background-image") != "none") {
-				var url = $(this).css("background-image");
-			} else if (typeof($(this).attr("src")) != "undefined" && $(this).attr("tagName").toLowerCase() == "img") {
-				var url = $(this).attr("src");
-			}
+  			if ($(this).css("background-image") != "none") {
+  				var url = $(this).css("background-image");
+  			} else if (typeof($(this).attr("src")) != "undefined" && $(this).attr("tagName").toLowerCase() == "img") {
+  				var url = $(this).attr("src");
+  			}
 			
-			url = url.replace("url(\"", "");
-			url = url.replace("url(", "");
-			url = url.replace("\")", "");
-			url = url.replace(")", "");
+  			url = url.replace("url(\"", "");
+  			url = url.replace("url(", "");
+  			url = url.replace("\")", "");
+  			url = url.replace(")", "");
 			
-			if (url.length > 0) {
-				QueryLoader.items.push(url);
-			}
-		});
-	},
+  			if (url.length > 0) {
+  				images.push(url);
+  			}
+  		});
+  	},
 	
-	createPreloading: function() {
-		QueryLoader.preloader = $("<div></div>").appendTo(QueryLoader.selectorPreload);
-		$(QueryLoader.preloader).css({
-			height: 	"0px",
-			width:		"0px",
-			overflow:	"hidden"
-		});
+  	createPreloading: function() {
+  		preloader = $("<div></div>").appendTo(selectorPreload);
+  		$(preloader).css({
+  			height: 	"0px",
+  			width:		"0px",
+  			overflow:	"hidden"
+  		});
 		
-		var length = QueryLoader.items.length; 
-		QueryLoader.doneStatus = length;
+  		var length = images.length + flatten(scripts).length;
+  		doneStatus = length;
 		
-		for (var i = 0; i < length; i++) {
-			var imgLoad = $("<img></img>");
-			$(imgLoad).attr("src", QueryLoader.items[i]);
-			$(imgLoad).unbind("load");
-			$(imgLoad).bind("load", function() {
-				QueryLoader.imgCallback();
-			});
-			$(imgLoad).appendTo($(QueryLoader.preloader));
-		}
-	},
+		  var self = this;
+  		for (var i = 0; i < images.length; i++) {
+  			var imgLoad = $("<img></img>");
+  			$(imgLoad).attr("src", images[i]);
+  			$(imgLoad).unbind("load");
+  			$(imgLoad).bind("load", function() {
+  				self.loadedCallback();
+  			});
+  			$(imgLoad).appendTo($(preloader));
+  		}
+		
+      // load scripts asynchronously when possible, while at the same
+      // time respecting the dependency list
+		  var _scripts = scripts;
+		  (function () {
+        
+        if(_scripts === null) return;
+        
+        var length = _scripts.length
+          , loader = arguments.callee
+          , last = _scripts[length - 1]
+          , loadsLeft = length
+        ;
+        
+        var scriptCallback = function () {
+  		    self.loadedCallback();
+  		    loadsLeft -= 1;
+  		    if(loadsLeft == 0) loader();
+  		  };
+        
+		    for (var i = 0; i < length - 1; i++) {
+    		  $.getScript(_scripts[i], scriptCallback);
+    		}
 
-	spawnLoader: function() {
-		if (QueryLoader.selectorPreload == "body") {
-			var height = $(window).height();
-			var width = $(window).width();
-			var position = "fixed";
-		} else {
-			var height = $(QueryLoader.selectorPreload).outerHeight();
-			var width = $(QueryLoader.selectorPreload).outerWidth();
-			var position = "absolute";
-		}
-		var left = $(QueryLoader.selectorPreload).offset()['left'];
-		var top = $(QueryLoader.selectorPreload).offset()['top'];
+    		if(typeof last == "string") {
+    		  _scripts = null;
+    		  $.getScript(last, function () {
+    		    self.loadedCallback();
+    		  });
+    		}
+    		else {
+    		  _scripts = last;
+    		  loadsLeft -= 1;
+    		}
+		  })();
+  	},
+
+  	spawnLoader: function() {
+  		if (selectorPreload == "body") {
+  			var height = $(window).height();
+  			var width = $(window).width();
+  			var position = "fixed";
+  		} else {
+  			var height = $(selectorPreload).outerHeight();
+  			var width = $(selectorPreload).outerWidth();
+  			var position = "absolute";
+  		}
+  		var left = $(selectorPreload).offset()['left'];
+  		var top = $(selectorPreload).offset()['top'];
 		
-		QueryLoader.overlay = $("<div></div>").appendTo($(QueryLoader.selectorPreload));
-		$(QueryLoader.overlay).addClass("QOverlay");
-		$(QueryLoader.overlay).css({
-			position: position,
-			top: top,
-			left: left,
-			width: width + "px",
-			height: height + "px"
-		});
+  		overlay = $("<div></div>").appendTo($(selectorPreload));
+  		$(overlay).addClass("QOverlay");
+  		$(overlay).css({
+  			position: position,
+  			top: top,
+  			left: left,
+  			width: width + "px",
+  			height: height + "px"
+  		});
 		
-		QueryLoader.loadBar = $("<div></div>").appendTo($(QueryLoader.overlay));
-		$(QueryLoader.loadBar).addClass("QLoader");
+  		loadBar = $("<div></div>").appendTo($(overlay));
+  		$(loadBar).addClass("QLoader");
 		
-		$(QueryLoader.loadBar).css({
-			position: "relative",
-			top: "50%",
-			width: "0%"
-		});
-	},
+  		$(loadBar).css({
+  			position: "relative",
+  			top: "50%",
+  			width: "0%"
+  		});
+  	},
 	
-	animateLoader: function() {
-		var perc = (100 / QueryLoader.doneStatus) * QueryLoader.doneNow;
-		if (perc > 99) {
-			$(QueryLoader.loadBar).stop().animate({
-				width: perc + "%"
-			}, 500, "linear", function() { 
-				QueryLoader.doneLoad();
-			});
-		} else {
-			$(QueryLoader.loadBar).stop().animate({
-				width: perc + "%"
-			}, 500, "linear", function() { });
-		}
-	},
+  	animateLoader: function() {
+  		var perc = (100 / doneStatus) * doneNow;
+  		var self = this;
+  		if (perc > 99) {
+  			$(loadBar).stop().animate({
+  				width: perc + "%"
+  			}, 500, "linear", function() { 
+  				self.doneLoad();
+  			});
+  		} else {
+  			$(loadBar).stop().animate({
+  				width: perc + "%"
+  			}, 500, "linear", function() { });
+  		}
+  	},
 	
-	doneLoad: function() {
-		//prevent IE from calling the fix
-		clearTimeout(QueryLoader.ieTimeout);
+  	doneLoad: function() {
+  		//prevent IE from calling the fix
+  		clearTimeout(ieTimeout);
 		
-		//determine the height of the preloader for the effect
-		if (QueryLoader.selectorPreload == "body") {
-			var height = $(window).height();
-		} else {
-			var height = $(QueryLoader.selectorPreload).outerHeight();
-		}
+  		//determine the height of the preloader for the effect
+  		if (selectorPreload == "body") {
+  			var height = $(window).height();
+  		} else {
+  			var height = $(selectorPreload).outerHeight();
+  		}
 		
-		//The end animation, adjust to your likings
-		$(QueryLoader.loadBar).animate({
-			height: height + "px",
-			top: 0
-		}, 500, "linear", function() {
-			$(QueryLoader.overlay).fadeOut(800);
-			$(QueryLoader.preloader).remove();
-		});
+  		//The end animation, adjust to your likings
+  		$(loadBar).animate({
+  			height: height + "px",
+  			top: 0
+  		}, 500, "linear", function() {
+  			$(overlay).fadeOut(800);
+  			$(preloader).remove();
+  		});
+  	}
 	}
-}
+})();
