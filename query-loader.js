@@ -21,6 +21,7 @@ var QueryLoader = (function () {
     , selectorPreload = "body"
     , scripts = []
     , images = []
+    , scriptPrefix = ''
 	;
 	
 	var flatten = function(array) {
@@ -41,6 +42,7 @@ var QueryLoader = (function () {
   	  selectorPreload = options.selectorPreload || selectorPreload;
   	  options.scripts && (scripts = options.scripts);
   	  options.images && (images = options.images);
+  	  options.scriptPrefix && (scriptPrefix = options.scriptPrefix);
 	    
   		if (navigator.userAgent.match(/MSIE (\d+(?:\.\d+)+(?:b\d*)?)/) == "MSIE 6.0,6.0") {
   			//break if IE6			
@@ -142,12 +144,12 @@ var QueryLoader = (function () {
   		  };
         
 		    for (var i = 0; i < length - 1; i++) {
-    		  $.getScript(_scripts[i], scriptCallback);
+    		  $.getScript(scriptPrefix + _scripts[i], scriptCallback);
     		}
 
     		if(typeof last == "string") {
     		  _scripts = null;
-    		  $.getScript(last, function () {
+    		  $.getScript(scriptPrefix + last, function () {
     		    self.loadedCallback();
     		  });
     		}
