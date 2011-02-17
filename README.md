@@ -24,6 +24,11 @@ Now place this at the bottom of your page:
 
 That's it!
 
+Demo
+====
+
+Checkout the `demo/` folder for a simple example.
+
 Credits
 =======
 
