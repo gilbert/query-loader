@@ -1,15 +1,4 @@
 var QueryLoader = (function () {
-  /*
-   * QueryLoader    Preload your site before displaying it!
-   * Author:      Gaya Kessler
-   * Date:      23-09-09
-   * URL:       http://www.gayadesign.com
-   * Version:     1.0
-   * 
-   * A simple jQuery powered preloader to load every image on the page and in the CSS
-   * before displaying the page to the user.
-   */
-  
   
   var overlay = ""
     , loadBar = ""
@@ -18,14 +7,9 @@ var QueryLoader = (function () {
     , doneNow = 0
     , ieLoadFixTime = 2000
     , ieTimeout = ""
-    , selectorPreload = "body"
-    , scripts = []
-    , images = []
-    , scriptPrefix = ''
-    , ops = {}
   ;
   
-  var flatten = function(array) {
+  var flatten = function (array) {
     return $.map(array, function (x) {
       if(x instanceof Array){
         return $.map(x,arguments.callee);
@@ -37,39 +21,53 @@ var QueryLoader = (function () {
   
   return {
     
+    images: [],
+    scripts: [],
+    selectorPreload: '',
+    
     init: function (options) {
-      options = options || {};
+      var self = this;
+      this.ops = {};
+
+      $.extend(this.ops, {
+        images: [],
+        scripts: [],
+        imagePrefix: '',
+        scriptPrefix: '',
+        selectorPreload: 'body',
+      }, options);
       
-      selectorPreload = options.selectorPreload || selectorPreload;
-      options.scripts && (scripts = options.scripts);
-      options.images && (images = options.images);
-      options.scriptPrefix && (scriptPrefix = options.scriptPrefix);
-      ops = options;
+      this.selectorPreload = this.ops.selectorPreload;
+      $.merge(this.scripts,this.ops.scripts);
+
+      $.each(this.ops.images, function (idx,src) {
+        self.images.push(self.ops.imagePrefix + src);
+      });
       
       if (navigator.userAgent.match(/MSIE (\d+(?:\.\d+)+(?:b\d*)?)/) == "MSIE 6.0,6.0") {
         //break if IE6      
         return false;
       }
-      if (selectorPreload == "body") {
+      if (this.selectorPreload == "body") {
         this.spawnLoader();
-        this.getImages(selectorPreload);
+        this.getImages(this.selectorPreload);
         this.createPreloading();
-      } else {
-        $(document).ready(function() {
+      }
+      else {
+        $(document).ready(function () {
           this.spawnLoader();
-          this.getImages(selectorPreload);
+          this.getImages(this.selectorPreload);
           this.createPreloading();
         });
       }
     
       //help IE drown if it is trying to die :)
-      var self = this;
       ieTimeout = setTimeout("QueryLoader.ieLoadFix()", function () {
         self.ieLoadFixTime();
       });
     },
   
-    ieLoadFix: function() {
+    ieLoadFix: function () {
       var ie = navigator.userAgent.match(/MSIE (\d+(?:\.\d+)+(?:b\d*)?)/);
       if (ie && ie[0].match("MSIE")) {
         while ((100 / doneStatus) * doneNow < 100) {
@@ -78,18 +76,23 @@ var QueryLoader = (function () {
       }
     },
   
-    loadedCallback: function() {
+    loadedCallback: function () {
       doneNow += 1;
       this.animateLoader();
     },
   
-    getImages: function(selector) {
-      var everything = $(selector).find("*:not(script)").each(function() {
+    getImages: function (selector) {
+      var self = this;
+      
+      var everything = $(selector).find("*:not(script)").each(function () {
         var url = "";
       
         if ($(this).css("background-image") != "none") {
           var url = $(this).css("background-image");
-        } else if (typeof($(this).attr("src")) != "undefined" && $(this).attr("tagName").toLowerCase() == "img") {
+        }
+        else if (typeof($(this).attr("src")) != "undefined" &&
+                 $(this).attr("tagName").toLowerCase() == "img")
+        {
           var url = $(this).attr("src");
         }
       
@@ -99,39 +102,38 @@ var QueryLoader = (function () {
         url = url.replace(")", "");
       
         if (url.length > 0) {
-          images.push(url);
+          self.images.push(url);
         }
       });
     },
   
-    createPreloading: function() {
-      preloader = $("<div></div>").appendTo(selectorPreload);
+    createPreloading: function () {
+      preloader = $("<div></div>").appendTo(this.selectorPreload);
       $(preloader).css({
         height:   "0px",
         width:    "0px",
         overflow: "hidden"
       });
     
-      var length = images.length + flatten(scripts).length;
+      var length = this.images.length + flatten(this.scripts).length;
       doneStatus = length;
     
       var self = this;
-      for (var i = 0; i < images.length; i++) {
-        var imgLoad = $("<img></img>");
-        $(imgLoad).attr("src", images[i]);
-        $(imgLoad).unbind("load");
-        $(imgLoad).bind("load", function() {
-          self.loadedCallback();
-        });
-        $(imgLoad).appendTo($(preloader));
+      for (var i = 0; i < this.images.length; i++) {
+        $("<img></img>")
+          .attr("src", this.images[i])
+          .unbind("load")
+          .bind("load", function () { self.loadedCallback(); })
+          .appendTo($(preloader))
+        ;
       }
     
       // load scripts asynchronously when possible, while at the same
       // time respecting the dependency list
-      var _scripts = scripts;
+      var _scripts = this.scripts;
       (function () {
         
-        if(_scripts === null) return;
+        if (_scripts === null) return;
         
         var length = _scripts.length
           , loader = arguments.callee
@@ -142,16 +144,16 @@ var QueryLoader = (function () {
         var scriptCallback = function () {
           self.loadedCallback();
           loadsLeft -= 1;
-          if(loadsLeft == 0) loader();
+          if (loadsLeft == 0) loader();
         };
         
         for (var i = 0; i < length - 1; i++) {
-          $.getScript(scriptPrefix + _scripts[i], scriptCallback);
+          $.getScript(self.ops.scriptPrefix + _scripts[i], scriptCallback);
         }
 
-        if(typeof last == "string") {
+        if (typeof last == "string") {
           _scripts = null;
-          $.getScript(scriptPrefix + last, function () {
+          $.getScript(self.ops.scriptPrefix + last, function () {
             self.loadedCallback();
           });
         }
@@ -163,19 +165,20 @@ var QueryLoader = (function () {
     },
 
     spawnLoader: function() {
-      if (selectorPreload == "body") {
+      if (this.selectorPreload == "body") {
         var height = $(window).height();
         var width = $(window).width();
         var position = "fixed";
-      } else {
-        var height = $(selectorPreload).outerHeight();
-        var width = $(selectorPreload).outerWidth();
+      }
+      else {
+        var height = $(this.selectorPreload).outerHeight();
+        var width = $(this.selectorPreload).outerWidth();
         var position = "absolute";
       }
-      var left = $(selectorPreload).offset()['left'];
-      var top = $(selectorPreload).offset()['top'];
+      var left = $(this.selectorPreload).offset()['left'];
+      var top = $(this.selectorPreload).offset()['top'];
     
-      overlay = $("<div></div>").appendTo($(selectorPreload));
+      overlay = $("<div></div>").appendTo($(this.selectorPreload));
       $(overlay).addClass("QOverlay");
       $(overlay).css({
         position: position,
@@ -201,13 +204,14 @@ var QueryLoader = (function () {
       if (perc > 99) {
         $(loadBar).stop().animate({
           width: perc + "%"
-        }, 500, "linear", function() { 
+        }, 500, "linear", function () { 
           self.doneLoad();
         });
-      } else {
+      }
+      else {
         $(loadBar).stop().animate({
           width: perc + "%"
-        }, 500, "linear", function() { });
+        }, 500, "linear", function () { });
       }
     },
   
@@ -216,18 +220,19 @@ var QueryLoader = (function () {
       clearTimeout(ieTimeout);
     
       //determine the height of the preloader for the effect
-      if (selectorPreload == "body") {
+      if (this.selectorPreload == "body") {
         var height = $(window).height();
-      } else {
-        var height = $(selectorPreload).outerHeight();
+      }
+      else {
+        var height = $(this.selectorPreload).outerHeight();
       }
       
-      var onComplete = ops.onComplete;
+      var onComplete = this.ops.onComplete;
       //The end animation, adjust to your likings
       $(loadBar).animate({
         height: height + "px",
         top: 0
-      }, 500, "linear", function() {
+      }, 500, "linear", function () {
         $(overlay).fadeOut(800);
         $(preloader).remove();
         onComplete && onComplete();
