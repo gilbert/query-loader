@@ -24,8 +24,8 @@ That's it!
 
 ## Demo
 
-[Click here](http://jsfiddle.net/mindeavor/G4Ayu/2/embedded/result/) for a live demo.
-[Fiddle with the live demo source](http://jsfiddle.net/mindeavor/G4Ayu/2/)
+[Click here](http://jsfiddle.net/mindeavor/G4Ayu/embedded/result/) for a live demo.
+[Fiddle with the live demo source](http://jsfiddle.net/mindeavor/G4Ayu/)
 
 ## Documentation
 
