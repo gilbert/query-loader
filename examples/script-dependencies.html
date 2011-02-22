@@ -1,0 +1,27 @@
+<!DOCTYPE html> 
+<html> 
+<head>
+  <link rel="stylesheet" href="css/style.css" type="text/css">
+</head>
+
+<body>
+  <img id="sample" src="img/sample.png" />
+  
+  <script type='text/javascript' src='js/jquery-1.5.min.js'></script>
+  <script type='text/javascript' src='../query-loader.js'></script>
+
+  <script type='text/javascript'>
+
+    function allDone () {
+      alert('Loading is complete!');
+    }
+    
+    QueryLoader.init({
+      scriptPrefix: 'http://documentcloud.github.com/',
+      scripts: ['underscore/underscore.js',
+                ['backbone/backbone.js']],
+      onComplete: allDone
+    });
+  </script>
+</body>
+</html>
