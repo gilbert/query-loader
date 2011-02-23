@@ -58,9 +58,14 @@ Options:
                      ['myApp.js','myHelpers.js','myUtils.js']]],
         });
 
+- `onLoad` A callback function that triggers once all assets have been loaded, but before the page is shown.
+
 - `onComplete` A callback function that triggers after the loading animation has fully completed.
 
         QueryLoader.init({
+          onLoad: function () {
+            alert('Loading complete. Now fading into your web page...');
+          },
           onComplete: function () {
             alert('Loading animation complete!');
           }

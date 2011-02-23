@@ -228,6 +228,7 @@ var QueryLoader = (function () {
       }
       
       var onComplete = this.ops.onComplete;
+      this.ops.onLoad && this.ops.onLoad();
       //The end animation, adjust to your likings
       $(loadBar).animate({
         height: height + "px",
