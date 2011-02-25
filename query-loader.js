@@ -166,17 +166,21 @@ var QueryLoader = (function () {
 
     spawnLoader: function() {
       if (this.selectorPreload == "body") {
-        var height = $(window).height();
-        var width = $(window).width();
-        var position = "fixed";
+        var height = $(window).height()
+          , width = $(window).width()
+          , position = "fixed"
+          , left = 0
+          , top = 0
+        ;
       }
       else {
-        var height = $(this.selectorPreload).outerHeight();
-        var width = $(this.selectorPreload).outerWidth();
-        var position = "absolute";
+        var height = $(this.selectorPreload).outerHeight()
+          , width = $(this.selectorPreload).outerWidth()
+          , position = "absolute"
+          , left = $(this.selectorPreload).offset()['left']
+          , top = $(this.selectorPreload).offset()['top']
+        ;
       }
-      var left = $(this.selectorPreload).offset()['left'];
-      var top = $(this.selectorPreload).offset()['top'];
     
       overlay = $("<div></div>").appendTo($(this.selectorPreload));
       $(overlay).addClass("QOverlay");
