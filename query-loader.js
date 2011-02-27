@@ -148,12 +148,16 @@ var QueryLoader = (function () {
         };
         
         for (var i = 0; i < length - 1; i++) {
-          $.getScript(self.ops.scriptPrefix + _scripts[i], scriptCallback);
+          if(!_scripts[i].match(/^http/))
+            _scripts[i] = self.ops.scriptPrefix + _scripts[i];
+          $.getScript(_scripts[i], scriptCallback);
         }
 
         if (typeof last == "string") {
+          if(!last.match(/^http/))
+            last = self.ops.scriptPrefix + last;
           _scripts = null;
-          $.getScript(self.ops.scriptPrefix + last, function () {
+          $.getScript(last, function () {
             self.loadedCallback();
           });
         }
