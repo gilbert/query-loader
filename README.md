@@ -37,6 +37,12 @@ By default, searches for all `img` tags and `background-image`s on the page and 
 
 Options:
 
+- `elem` (defaults to `'body'`): A jQuery selector that determines which element to preload.
+
+        QueryLoader.init({
+          elem: '#image-gallery'
+        });
+
 - `images` An additional array of image source urls to preload during the preloading process.
 
 - `imagePrefix` A handy helper that prefixes all the given image sources with the given string.

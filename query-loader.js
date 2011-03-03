@@ -34,10 +34,10 @@ var QueryLoader = (function () {
         scripts: [],
         imagePrefix: '',
         scriptPrefix: '',
-        selectorPreload: 'body',
+        elem: 'body'
       }, options);
       
-      this.selectorPreload = this.ops.selectorPreload;
+      this.selectorPreload = this.ops.elem;
       $.merge(this.scripts,this.ops.scripts);
 
       $.each(this.ops.images, function (idx,src) {
