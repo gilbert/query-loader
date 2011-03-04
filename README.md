@@ -33,7 +33,7 @@ That's it!
 
     QueryLoader.init([options])
 
-By default, searches for all `img` tags and `background-image`s on the page and pre-loads them behind an animated loading bar.
+By default, searches for all `img` tags and `background-image`s in the selected element and pre-loads them behind an animated loading bar.
 
 Options:
 
@@ -53,7 +53,7 @@ Options:
         });
 
 
-- `scripts` A script dependency pipeline represented as a multi-level array. See *Dependency Pipeline* for details.
+- `scripts` A script dependency pipeline represented as a multi-level array. See **Dependency Pipeline** for details.
 
 - `scriptPrefix` A handy helper that prefixes all the given scripts with the given string.
 
@@ -77,6 +77,18 @@ Options:
           }
         });
 
+## Dependency Pipeline
+
+The `scripts` option provides a way to load multiple scripts asynchronously, while still maintaining dependencies. Every level of the array is considered a dependency for the next deeper level.
+
+For example, if A and B both depend on X:
+
+    QueryLoader.init({
+      scripts: ['X.js',
+                ['A.js', 'B.js']]
+    });
+
+In this example, X is loaded first. Once X is loaded, both A and B are loaded asynchronously.
 
 Credits
 =======
